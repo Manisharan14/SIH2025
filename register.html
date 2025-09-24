@@ -1,0 +1,194 @@
+\<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Traveler Signup</title>
+  <link rel="stylesheet" href="register.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: url('login.png') no-repeat center center fixed;
+      background-size: cover;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .form-container {
+      background: rgba(0, 0, 0, 0.6);
+      padding: 30px;
+      border-radius: 12px;
+      width: 350px;
+      text-align: center;
+      color: white;
+      box-shadow: 0 0 15px rgba(0,0,0,0.8);
+    }
+    .form-container input,
+    .form-container select {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 6px;
+    }
+    .form-container button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 12px;
+      border: none;
+      border-radius: 6px;
+      background: #ff7200;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .form-container button:hover {
+      background: #e06600;
+    }
+    a {
+      color: #ff7200;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    video {
+      border-radius: 8px;
+      margin-top: 10px;
+      border: 2px solid #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>Traveler Sign Up</h2>
+    <form id="signupForm">
+      <input type="text" id="name" placeholder="Full Name" required>
+      <input type="email" id="email" placeholder="Email" required>
+      <input type="tel" id="phone" placeholder="Phone Number" required>
+      <input type="text" id="idNumber" placeholder="Adhar/Passport ID" required>
+      <select id="language" required>
+        <option value="" disabled selected>Select Language</option>
+        <option value="English">English</option>
+        <option value="Telugu">Telugu</option>
+        <option value="Hindi">Hindi</option>
+        <option value="Tamil">Tamil</option>
+      </select>
+      <input type="password" id="password" placeholder="Create Password" required>
+
+        
+
+
+      <button type="button" onclick="submitSignup()">Sign Up</button>
+    </form>
+    <p>Already have an account? <a href="login.html">Login here</a></p>
+  </div>
+<script>
+// Ensure frontend calls the Flask backend even if the page is served from a different origin
+// Default to localhost:5000 where Flask runs in this project. You can override window.API_BASE in dev tools if needed.
+window.API_BASE = window.API_BASE || 'http://127.0.0.1:5000';
+</script>
+<script src="{{ url_for('static', filename='biometric_register.js') }}"></script>
+<script>
+// Use platform authenticator to register fingerprint (wrapper)
+function startBiometricRegister() {
+  const email = document.getElementById('email').value;
+  if (!email) { alert('Please enter email first'); return; }
+
+  // If the biometric script is already present, call it. Otherwise try to load it dynamically.
+  async function ensureAndStart() {
+    if (window.startBiometricRegisterClient) return window.startBiometricRegisterClient(email);
+
+    console.debug('biometric script not present, attempting to load /static/biometric_register.js');
+    return new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = '/static/biometric_register.js';
+      s.async = true;
+      s.onload = async () => {
+        console.debug('biometric script loaded');
+        if (window.startBiometricRegisterClient) {
+          try { const r = await window.startBiometricRegisterClient(email); resolve(r); }
+          catch (e) { reject(e); }
+        } else {
+          reject(new Error('biometric API not exposed after load'));
+        }
+      };
+      s.onerror = () => reject(new Error('failed to load biometric script'));
+      document.head.appendChild(s);
+      // Timeout if the script doesn't load in 8s
+      setTimeout(() => reject(new Error('biometric script load timeout')), 8000);
+    });
+  }
+
+  ensureAndStart().catch(err => {
+    console.error('Biometric registration failed:', err);
+    alert('Biometric registration not available: ' + (err && err.message ? err.message : 'unknown'));
+  });
+}
+
+// Signup function
+async function submitSignup() {
+  let name = document.getElementById("name").value;
+  let email = document.getElementById("email").value;
+  let phone = document.getElementById("phone").value;
+  let idNumber = document.getElementById("idNumber").value;
+  let language = document.getElementById("language").value;
+  let password = document.getElementById("password").value;
+
+  if (!name || !email || !phone || !idNumber || !language || !password) {
+    alert("Please fill all fields!");
+    return;
+  }
+
+  // No face image required; we rely on WebAuthn fingerprint registration
+  let userData = { name, email, phone, idNumber, language, password };
+
+  try {
+    let res = await fetch("http://127.0.0.1:5000/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(userData)
+    });
+
+    let data = await res.json();
+    alert(data.message);
+
+    if (data.success) {
+      // After server-side signup, trigger fingerprint (WebAuthn) registration
+      try {
+        if (window.startBiometricRegisterClient) await window.startBiometricRegisterClient(email);
+      } catch (err) {
+        console.error('Fingerprint registration skipped:', err);
+      }
+      window.location.href = "login.html"; // redirect after signup
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Failed to connect to server.");
+  }
+}
+
+// WebAuthn fingerprint registration (platform authenticator)
+async function startFingerprintRegistration(email) {
+  if (!email) return;
+  const optsRes = await fetch((window.API_BASE || '') + '/webauthn/register/options', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+  if (!optsRes.ok) { const t = await optsRes.json(); throw new Error(t.message || 'Failed to get options'); }
+  const options = await optsRes.json();
+  options.publicKey.challenge = Uint8Array.from(atob(options.publicKey.challenge.replace(/-/g,'+').replace(/_/g,'/')), c=>c.charCodeAt(0));
+  options.publicKey.user.id = Uint8Array.from(atob(options.publicKey.user.id.replace(/-/g,'+').replace(/_/g,'/')), c=>c.charCodeAt(0));
+
+  const cred = await navigator.credentials.create(options.publicKey);
+  const rawId = cred.rawId;
+  const idB64 = btoa(String.fromCharCode(...new Uint8Array(rawId))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+
+  const completeRes = await fetch((window.API_BASE || '') + '/webauthn/register/complete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, credential: { id: idB64 } }) });
+  const result = await completeRes.json();
+  alert(result.message || 'Fingerprint registration complete');
+  return result;
+}
+</script>
+</body>
+</html>

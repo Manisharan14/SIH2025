@@ -1,0 +1,188 @@
+:root {
+  --primary-color: #ff5722;
+  --secondary-color: #009688;
+  --text-color: #fff;
+  --bg-overlay: rgba(0,0,0,0.6);
+  --form-bg: rgba(255,255,255,0.9);
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: Arial, sans-serif;
+}
+
+/* Full background image */
+.hero {
+  background: url('login.png') no-repeat center center/cover;
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 40px;
+  box-sizing: border-box;
+  position: relative;
+  color: var(--text-color);
+}
+
+/* Left content */
+.content {
+  max-width: 50%;
+}
+.content h1 {
+  font-size: 3rem;
+  line-height: 1.2;
+}
+.content span {
+  color: var(--secondary-color);
+}
+.content .par {
+  margin-top: 10px;
+  font-size: 1.1rem;
+}
+
+/* Right-side login form */
+.form {
+  width: 350px;
+  background: var(--form-bg);
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  color: #333;
+}
+.form h2 {
+  margin-bottom: 20px;
+  color: var(--primary-color);
+}
+.form input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+.btnn {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: none;
+  background: var(--secondary-color);
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.btnn:hover { background: #00796b; }
+.face-btn {
+  background: var(--primary-color);
+}
+.face-btn:hover {
+  background: #e64a19;
+}
+.link, .liw {
+  text-align: center;
+  margin: 15px 0;
+}
+.icons {
+  text-align: center;
+}
+.icons a {
+  margin: 0 8px;
+  color: var(--secondary-color);
+  font-size: 18px;
+}
+
+/* Floating Chatbot */
+#chatButton {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--secondary-color);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  font-size: 26px;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  transition: transform 0.2s;
+  z-index: 200;
+}
+#chatButton:hover { transform: scale(1.1); }
+
+#chatWindow {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  width: 320px;
+  height: 420px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  display: none;
+  flex-direction: column;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  z-index: 200;
+}
+#chatHeader {
+  background: var(--primary-color);
+  color: white;
+  padding: 12px;
+  font-weight: bold;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+#chatbox {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+  font-size: 14px;
+}
+#chatInputArea {
+  display: flex;
+  border-top: 1px solid #ccc;
+}
+#userInput {
+  flex: 1;
+  border: none;
+  padding: 10px;
+}
+#sendBtn {
+  background: var(--secondary-color);
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+}
+
+/* Biometric login overlay (no camera) */
+#biometricOverlay {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.4);
+  z-index: 300;
+}
+.biometric-card {
+  background: white;
+  padding: 18px;
+  border-radius: 10px;
+  text-align: center;
+  max-width: 420px;
+}
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.7; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.btnn.small {
+  width: auto;
+  padding: 8px 20px;
+  margin-top: 10px;
+}
